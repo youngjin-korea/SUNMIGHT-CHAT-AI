@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat Bot</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #ececf1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      #chat-container {
+        width: 700px;
+        height: calc(100vh - 72px);
+        margin: 36px 0;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+      }
+
+      #chat {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      }
+
+      .user {
+        align-self: flex-end;
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border-top-right-radius: 0;
+      }
+
+      .bot {
+        align-self: flex-start;
+        background-color: #f1f0f0;
+        color: #111;
+        border-top-left-radius: 0;
+      }
+
+      #inputArea {
+        display: flex;
+        gap: 8px;
+      }
+
+      #inputText {
+        flex: 1;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        resize: vertical; /* 사용자가 마음대로 크기 조절 가능하게 */
+        height: 20px; /* 기본 높이 설정 */
+        overflow-y: auto; /* 내용이 길어지면 스크롤 생성 */
+        font-family: inherit; /* 폰트 일치 */
+      }
+
+      #sendBtn {
+        padding: 10px 18px;
+        background-color: #10a37f;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      #sendBtn:hover {
+        background-color: #0d8f6d;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="chat-container">
+      <div id="chat"></div>
+      <div id="inputArea">
+        <textarea
+          id="inputText"
+          placeholder="메세지를 입력하세요"
+          rows="1"
+        ></textarea>
+        <input type="button" id="sendBtn" value="전송" />
+      </div>
+    </div>
+  </body>
+
+  <script>
+    // id로 요소 가져오기
+    const chatDiv = document.getElementById("chat");
+    const inputText = document.getElementById("inputText");
+    const sendBtn = document.getElementById("sendBtn");
+
+    const userId = "user1" + "_" + "1";
+
+    // 대화 기록 불러오기
+    async function loadChatHistory() {
+      const response = await fetch(`/chat/history/${userId}`, {
+        method: "POST",
+      });
+      const messages = await response.json();
+      messages.forEach((msg) => {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", msg.type === "USER" ? "user" : "bot");
+        chatDiv.appendChild(msgDiv);
+      });
+      // 현재 스크롤 바의 상단의 위치 = 최대 스크롤 가능한 높이
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    // streamChat api 요청
+    async function streamChat(text) {
+      // 요청 후 응답 받기
+      const response = await fetch("/api/v1/openai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      // 스트림 리더와 디코더 기능 공부 필요!
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      // 봇 메세지 div 생성
+      const botMessageDiv = document.createElement("div");
+      botMessageDiv.classList.add("message", "bot");
+      botMessageDiv.textContent = "";
+      chatDiv.appendChild(botMessageDiv);
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+
+      let botMessage = "";
+
+      // reader로 스트림 읽고 화면에 추가하고 스크롤 내리기
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        botMessage += chunk;
+        botMessageDiv.textContent = botMessage;
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+      }
+    }
+
+    // 이벤트 리스너 등록
+    sendBtn.addEventListener("click", async () => {
+      const text = inputText.value.trim();
+      if (!text) return;
+
+      // 유저 메세지 div 생성
+      const userMessageDiv = document.createElement("div");
+      userMessageDiv.classList.add("message", "user");
+      userMessageDiv.textContent = text;
+      chatDiv.appendChild(userMessageDiv);
+
+      inputText.value = "";
+      inputText.style.height = "20px"; // 높이 초기화
+
+      await streamChat(text);
+    });
+
+    inputText.addEventListener("keydown", (e) => {
+      if (e.key == "Enter") {
+        if (!e.shiftKey) {
+          e.preventDefault();
+          sendBtn.click();
+        }
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", loadChatHistory);
+  </script>
+</html>
