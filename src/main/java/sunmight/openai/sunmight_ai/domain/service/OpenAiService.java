@@ -2,6 +2,7 @@ package sunmight.openai.sunmight_ai.domain.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -60,6 +61,8 @@ public class OpenAiService {
 
     public Flux<String> generateStream(String text) {
 
+        ChatClient chatClient = ChatClient.create(openAiChatModel);
+
         // 유저&페이지별 ChatMemory를 관리하기 위한 key (우선은 명시적으로)
         String userId = "user1" + "_" + "1";
 
@@ -89,17 +92,19 @@ public class OpenAiService {
         StringBuilder responseBuffer = new StringBuilder();
 
         // 요청 및 응답
-        return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> {
-                    String token = response.getResult().getOutput().getText();
+        return chatClient.prompt(prompt)
+                .stream()
+                .content()
+                .map(token -> {
                     responseBuffer.append(token);
                     return token;
                 })
                 .doOnComplete(() -> {
+                    // chatMemory저장
                     chatMemory.add(userId, new AssistantMessage(responseBuffer.toString()));
                     chatMemoryRepository.saveAll(userId, chatMemory.get(userId));
 
-                    // 전체 대화 저장
+                    //전체 대화내용 저장
                     ChatEntity chatAssistantEntity = new ChatEntity();
                     chatAssistantEntity.setUserId(userId);
                     chatAssistantEntity.setType(MessageType.ASSISTANT);
