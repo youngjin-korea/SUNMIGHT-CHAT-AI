@@ -23,6 +23,7 @@ import reactor.core.publisher.Flux;
 import sunmight.openai.sunmight_ai.api.dto.CityResponseDTO;
 import sunmight.openai.sunmight_ai.domain.entity.ChatEntity;
 import sunmight.openai.sunmight_ai.domain.repository.ChatRepository;
+import sunmight.openai.sunmight_ai.domain.tools.ChatTools;
 
 @RequiredArgsConstructor
 @Service
@@ -98,6 +99,7 @@ public class OpenAiService {
 
         // 요청 및 응답
         return chatClient.prompt(prompt)
+                .tools(new ChatTools())
                 .stream()
                 .content()
                 .map(token -> {
