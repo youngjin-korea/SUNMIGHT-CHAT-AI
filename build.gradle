@@ -38,6 +38,12 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    // TODO:: 온도 설비, 작업조, 작업 시간대 불량 여부 vectorDB 문서화
+    // RAG를 위한 VectorStore 객체관련 의존성
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+    // RAG를 위한 VectorDB는 Elasticsearch
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-elasticsearch'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

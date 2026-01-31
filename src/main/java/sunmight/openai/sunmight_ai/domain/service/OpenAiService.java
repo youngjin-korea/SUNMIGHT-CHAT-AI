@@ -62,7 +62,7 @@ public class OpenAiService {
         //요청 및 응답 -> call() 호출시 entity 메소드로 outPut Convertor 가능
         return chatClient.prompt(prompt)
                 .call()
-                .entity(CityResponseDTO.class);
+                .entity(CityResponseDTO.class);  // TODO:: 보고서 양식의 DTO OutPut Structured 생성 (ex: 제목, 작성 날짜, 작성자, 분석내용 및 이유, 원인 및 이유, 해결책 및 이유)
     }
 
     public Flux<String> generateStream(String text) {

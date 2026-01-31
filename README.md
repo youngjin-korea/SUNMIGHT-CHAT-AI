@@ -7,7 +7,17 @@
   - OpenAiAudioTranscriptionModel
 
 ### 2. ChatMemory & JdbcChatMemoryRepository 멀티턴 구현, JPA ChatRepository로 전체 내용 저장
+  - 전체 대화내용 저장을 위한 테이블
 
+    
+    CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
+    `conversation_id` VARCHAR(36) NOT NULL,
+    `content` TEXT NOT NULL,
+    `type` ENUM('USER', 'ASSISTANT', 'SYSTEM', 'TOOL') NOT NULL,
+    `timestamp` TIMESTAMP NOT NULL,
+
+    INDEX `SPRING_AI_CHAT_MEMORY_CONVERSATION_ID_TIMESTAMP_IDX` (`conversation_id`, `timestamp`));
+    
 ### 3. ChatClient
   - OpenAiChatModel을 Wrapper로 감싼 클래스로 아래 기능 사용이 가능
     - tools : LLM에 사용할 튤 붙임
@@ -31,3 +41,14 @@
     3. 튤을 활용하여 데이터를 처리하고 
     4. 튤 실행 결과를 다시 LLM API에 전달
     5. LLM API의 최종 응답
+
+### 6. RAG를 위한 Advisor
+  - RAG란 LLM에게 우리 도메인의 지식을 부여하기 위해 프롬프트에 N개의 데이터를 더해서 보내는 기법
+  - 구현 : ChatClient advisors 메소드는 RAG를 통합할 수 있는 기능 제공, advisors메소드에 VectorStore객체를 넣어주어야함.
+~~~
+implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+~~~
+  - 벡터 DB는 Elasticsearch
+~~~
+implementation 'org.springframework.ai:spring-ai-starter-vector-store-elasticsearch'
+~~~

@@ -3,6 +3,7 @@ package sunmight.openai.sunmight_ai.domain.tools;
 import org.springframework.ai.tool.annotation.Tool;
 import sunmight.openai.sunmight_ai.api.dto.UserResponseDTO;
 
+// TODO:: 날짜 시간별 설비별 작업조별 설비 온도별 품질별 조회 -> 날짜 시간별 설비별 작업조별 설비 온도별 품질별 품질 원인 분석
 public class ChatTools {
 
     /**
