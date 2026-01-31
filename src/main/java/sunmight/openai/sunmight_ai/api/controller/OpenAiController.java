@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import sunmight.openai.sunmight_ai.api.dto.CityResponseDTO;
 import sunmight.openai.sunmight_ai.domain.service.OpenAiService;
 
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class OpenAiController {
     private final OpenAiService openAiService;
 
     @PostMapping("/chat")
-    public String chat (@RequestBody Map<String, String> body) {
+    public CityResponseDTO chat (@RequestBody Map<String, String> body) {
         return openAiService.generate(body.get("text"));
     }
 
