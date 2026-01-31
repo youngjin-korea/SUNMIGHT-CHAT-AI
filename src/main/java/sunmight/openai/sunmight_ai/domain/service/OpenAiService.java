@@ -3,6 +3,8 @@ package sunmight.openai.sunmight_ai.domain.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -18,6 +20,8 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiImageModel;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import sunmight.openai.sunmight_ai.api.dto.CityResponseDTO;
@@ -28,6 +32,9 @@ import sunmight.openai.sunmight_ai.domain.tools.ChatTools;
 @RequiredArgsConstructor
 @Service
 public class OpenAiService {
+
+    // elasticsearch를 붙힌 vectorstore
+    private final VectorStore elasticsearchVectorStore;
 
     // JdbcChatMemoryRepository DI
     private final ChatMemoryRepository chatMemoryRepository;
@@ -97,9 +104,14 @@ public class OpenAiService {
         //응답 메세지를 담아줄 버퍼
         StringBuilder responseBuffer = new StringBuilder();
 
+        Advisor ragAdvisor = QuestionAnswerAdvisor.builder(elasticsearchVectorStore)
+                .searchRequest(SearchRequest.builder().similarityThreshold(0.8d).topK(6).build())
+                .build();
+
         // 요청 및 응답
         return chatClient.prompt(prompt)
                 .tools(new ChatTools())
+                .advisors(ragAdvisor)
                 .stream()
                 .content()
                 .map(token -> {
