@@ -53,3 +53,7 @@ implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
 implementation 'org.springframework.ai:spring-ai-starter-vector-store-elasticsearch'
 ~~~
   - VectorStoreConfig 설정으로 연결 뿐만 아니라, 스프링 기반의 자동 인덱스 생성, 자연어 추가시 자동 임베딩 API 연결을 처리할 수 있습니다.
+
+### 7. 문서를 읽어오는 Document Reader
+  - 스프링 AI의 ETL 파이프라인 중 Document Reader 부분을 통해 문서별 Reader 객체
+  - 
